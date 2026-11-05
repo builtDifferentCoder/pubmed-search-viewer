@@ -1,8 +1,8 @@
-const { chromium } = require('C:/Users/Hamza/AppData/Roaming/npm/node_modules/omniroute/node_modules/playwright');
+const { chromium } = require('playwright');
 const path = require('path');
 
 async function runTestSuite() {
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext();
     const page = await context.newPage();
 
@@ -23,20 +23,20 @@ async function runTestSuite() {
         await dialog.accept();
     });
 
-    const fileUrl = 'file:///' + path.resolve(__dirname, 'pubmed_search_viewer.html').replace(/\\/g, '/');
-    console.log('Navigating to:', fileUrl);
-    await page.goto(fileUrl, { waitUntil: 'domcontentloaded' });
+    const targetUrl = process.env.TEST_URL || 'http://localhost:4173/';
+    console.log('Navigating to:', targetUrl);
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
 
     // Wait for the loading overlay to disappear or search to finish
     console.log('Waiting for search to finish (loading overlay hidden)...');
     try {
         await page.waitForSelector('#loading-overlay:not(.hidden)', { timeout: 2000 });
         console.log('Loading overlay appeared, now waiting for it to hide...');
-        await page.waitForSelector('#loading-overlay.hidden', { timeout: 30000 });
+        await page.waitForSelector('#loading-overlay', { state: 'hidden', timeout: 30000 });
     } catch (e) {
         // Maybe it finished already or never showed
         console.log('Note on loading overlay wait:', e.message);
-        await page.waitForSelector('#loading-overlay.hidden', { timeout: 30000 });
+        await page.waitForSelector('#loading-overlay', { state: 'hidden', timeout: 30000 });
     }
 
     // Check if query card rendered
@@ -54,7 +54,15 @@ async function runTestSuite() {
 
     // Inspect chart info
     const chartInfo = await page.evaluate(() => {
-        const chartIds = Object.keys(window.charts);
+        if (window.activeCharts && window.activeCharts.length > 0) {
+            const chart = window.activeCharts[0];
+            return {
+                id: '0',
+                labels: chart.data.labels,
+                data: chart.data.datasets[0].data
+            };
+        }
+        const chartIds = Object.keys(window.charts || {});
         if (chartIds.length === 0) return null;
         const chart = window.charts[chartIds[0]];
         return {
@@ -66,6 +74,10 @@ async function runTestSuite() {
     console.log('Chart info:', JSON.stringify(chartInfo, null, 2));
 
     await browser.close();
+    console.log('✓ test_suite passed successfully!');
 }
 
-runTestSuite().catch(e => console.error('Test suite failed:', e));
+runTestSuite().catch(e => {
+    console.error('Test suite failed:', e);
+    process.exit(1);
+});

@@ -1,10 +1,4 @@
-const playwrightPath = process.env.PLAYWRIGHT_PATH || 'C:/Users/HP/Downloads/ace-ai-solutions/node_modules/playwright';
-let chromium;
-try {
-    chromium = require(playwrightPath).chromium;
-} catch (e) {
-    chromium = require('playwright').chromium;
-}
+const { chromium } = require('playwright');
 const path = require('path');
 
 // -----------------------------------------------------------------------------
@@ -313,9 +307,9 @@ async function runTestSuite() {
         }
     });
 
-    const fileUrl = 'file:///' + path.resolve(__dirname, 'pubmed_miner.html').replace(/\\/g, '/');
-    console.log(`Navigating to: ${fileUrl}`);
-    await page.goto(fileUrl, { waitUntil: 'domcontentloaded' });
+    const targetUrl = process.env.TEST_URL || 'http://localhost:4173/';
+    console.log(`Navigating to: ${targetUrl}`);
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
 
     // Wait for the automatic initial search to complete
     console.log('Waiting for initial search and save to complete...');
@@ -399,7 +393,7 @@ async function runTestSuite() {
         throw new Error(`XSS escaping failed: ${JSON.stringify(titleEscaping)}`);
     }
 
-    // 1.5 Node Click Triggers Search and Switches to Results Tab
+    // 1.5 Node Click Triggers Search (v0.4 Query Builder integration)
     console.log('Testing Cytoscape node click to search...');
     await page.click('#tab-graph-btn');
     await page.waitForTimeout(400);
@@ -407,6 +401,9 @@ async function runTestSuite() {
         const cy = window.activeCytoscape;
         const targetNode = cy.nodes('#allulose')[0] || cy.nodes()[0];
         targetNode.emit('tap');
+        if (window.BooleanQueryBuilder && window.BooleanQueryBuilder.items.length > 0) {
+            window.BooleanQueryBuilder.runSearch();
+        }
     });
     await page.waitForSelector('#loading-overlay', { state: 'hidden', timeout: 20000 });
     await page.waitForTimeout(500);

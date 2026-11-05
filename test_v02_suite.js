@@ -1,4 +1,4 @@
-const { chromium } = require('C:/Users/HP/Downloads/ace-ai-solutions/node_modules/playwright');
+const { chromium } = require('playwright');
 const path = require('path');
 
 // Mock data generating function for NCBI endpoints
@@ -211,9 +211,9 @@ async function runTests() {
         }
     });
 
-    const fileUrl = 'file:///' + path.resolve(__dirname, 'pubmed_miner.html').replace(/\\/g, '/');
-    console.log('Navigating to:', fileUrl);
-    await page.goto(fileUrl, { waitUntil: 'domcontentloaded' });
+    const targetUrl = process.env.TEST_URL || 'http://localhost:4173/';
+    console.log('Navigating to:', targetUrl);
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
 
     // Wait for the automatic initial search to finish
     console.log('Waiting for initial search and save to complete...');

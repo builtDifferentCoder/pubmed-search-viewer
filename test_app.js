@@ -1,8 +1,8 @@
-const { chromium } = require('C:/Users/Hamza/AppData/Roaming/npm/node_modules/omniroute/node_modules/playwright');
+const { chromium } = require('playwright');
 const path = require('path');
 
 (async () => {
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext();
     const page = await context.newPage();
 
@@ -19,12 +19,12 @@ const path = require('path');
         consoleErrors.push(err.toString());
     });
 
-    const fileUrl = 'file:///' + path.resolve(__dirname, 'pubmed_search_viewer.html').replace(/\\/g, '/');
-    console.log('Navigating to:', fileUrl);
-    await page.goto(fileUrl, { waitUntil: 'domcontentloaded' });
+    const targetUrl = process.env.TEST_URL || 'http://localhost:4173/';
+    console.log('Navigating to:', targetUrl);
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
 
-    console.log('Page loaded. Waiting for network idle or 5 seconds...');
-    await page.waitForTimeout(5000);
+    console.log('Page loaded. Waiting for network idle or 3 seconds...');
+    await page.waitForTimeout(3000);
 
     console.log('Console logs:');
     consoleLogs.forEach(l => console.log(l));
@@ -43,4 +43,8 @@ const path = require('path');
     console.log('Libraries loaded:', libsLoaded);
 
     await browser.close();
+    if (!libsLoaded.hasDexie || !libsLoaded.hasChart) {
+        throw new Error('Dexie or Chart.js failed to load!');
+    }
+    console.log('✓ test_app passed successfully!');
 })();

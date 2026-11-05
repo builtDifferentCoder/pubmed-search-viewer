@@ -1,10 +1,4 @@
-const playwrightPath = process.env.PLAYWRIGHT_PATH || 'C:/Users/HP/Downloads/ace-ai-solutions/node_modules/playwright';
-let chromium;
-try {
-    chromium = require(playwrightPath).chromium;
-} catch (e) {
-    chromium = require('playwright').chromium;
-}
+const { chromium } = require('playwright');
 const path = require('path');
 
 // -----------------------------------------------------------------------------
@@ -178,9 +172,10 @@ async function runPhase4Tests() {
         }
     });
 
-    const fileUrl = 'file:///' + path.resolve(__dirname, 'pubmed_miner.html').replace(/\\/g, '/');
-    console.log(`Navigating to: ${fileUrl}`);
-    await page.goto(fileUrl, { waitUntil: 'domcontentloaded' });
+    const targetUrl = process.env.TEST_URL || 'http://localhost:4173/';
+    const fileUrl = targetUrl;
+    console.log(`Navigating to: ${targetUrl}`);
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#loading-overlay', { state: 'hidden', timeout: 20000 });
     await page.waitForTimeout(500);
 

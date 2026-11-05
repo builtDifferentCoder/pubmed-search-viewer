@@ -222,9 +222,9 @@ function getMockResponses() {
         }
     });
 
-    const fileUrl = 'file:///' + path.resolve(__dirname, 'pubmed_search_viewer.html').replace(/\\/g, '/');
-    console.log('Navigating to:', fileUrl);
-    await page.goto(fileUrl, { waitUntil: 'domcontentloaded' });
+    const targetUrl = process.env.TEST_URL || 'http://localhost:4173/';
+    console.log('Navigating to:', targetUrl);
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
     // Test 1: Verify Divergence Panel is rendered on Search Results
