@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node run_all_tests.js"
+    "test": "node run_all_tests.mjs"
   },
   "dependencies": {
     "@phosphor-icons/web": "^2.1.1",

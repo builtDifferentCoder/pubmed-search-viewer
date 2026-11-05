@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PubMed ResearchMiner v0.4</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <i class="ph-fill ph-dna text-3xl text-blue-600"></i>
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">PubMed Research<span class="text-blue-600">Miner</span> <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold align-middle">v0.4</span></h1>
+            </div>
+
+            <form id="search-form" class="w-full md:w-auto flex-1 max-w-2xl flex items-center shadow-sm rounded-lg border border-slate-300 overflow-hidden bg-slate-50 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+                <div class="pl-3 text-slate-400"><i class="ph ph-magnifying-glass text-lg"></i></div>
+                <input type="text" id="search-input" value="allulose diet" placeholder="Search terms..."
+                    class="w-full py-2 px-3 bg-transparent outline-none text-slate-700 font-medium placeholder-slate-400" required>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 font-medium transition-colors border-l border-blue-700 flex items-center gap-2">
+                    <span>Search &amp; Save</span>
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+
+        <!-- Top-level Navigation Tabs -->
+        <div id="tabs-nav-bar" class="flex items-center justify-between border-b border-slate-200">
+            <div class="flex items-center gap-2 -mb-px">
+                <button id="tab-results-btn" class="px-5 py-2.5 font-semibold text-sm border-b-2 border-blue-600 text-blue-600 flex items-center gap-2 transition-colors">
+                    <i class="ph-fill ph-chart-bar text-lg"></i> Search Results
+                </button>
+                <button id="tab-graph-btn" class="px-5 py-2.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-colors">
+                    <i class="ph-fill ph-graph text-lg"></i> Keywords Graph
+                </button>
+                <button id="tab-primers-btn" class="px-5 py-2.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-colors">
+                    <i class="ph-fill ph-compass text-lg"></i> Search Primers
+                </button>
+            </div>
+            <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 pb-2">
+                <button id="btn-build-info" type="button" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-full text-slate-600 transition-colors cursor-pointer" title="View Version & Build Info">
+                    <i class="ph ph-info"></i>
+                    <span>v0.4.0 Build Info</span>
+                </button>
+                <span class="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
+                    <i class="ph ph-database"></i> IndexedDB v3
+                </span>
+            </div>
+        </div>
+
+        <div id="notification-area" class="hidden p-4 rounded-lg border"></div>
+
+        <div class="relative">
+            <div id="loading-overlay" class="hidden fixed inset-0 bg-white/70 backdrop-blur-sm z-30 flex flex-col items-center justify-center">
+                <div class="spinner mb-4"></div>
+                <p class="text-slate-600 font-medium animate-pulse" id="loading-text">Querying NCBI E-utilities...</p>
+            </div>
+
+            <!-- Contradiction Analysis Side-by-Side Modal (Phase 2) -->
+            <div id="divergence-compare-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-sm">
+                                    <i class="ph-bold ph-arrows-split"></i>
+                                </span>
+                                <h3 class="text-base font-bold text-slate-900">Contradiction Analysis: Side-by-Side Comparison</h3>
+                            </div>
+                            <div id="modal-shared-keywords-banner" class="flex items-center gap-1.5 flex-wrap mt-2 text-xs text-slate-600"></div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <button id="modal-highlight-graph-btn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors">
+                                <i class="ph ph-graph"></i> <span>View Path in Graph</span>
+                            </button>
+                            <button id="modal-close-btn" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors" title="Close Comparison">
+                                <i class="ph ph-x text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 custom-scrollbar">
+                        <div id="modal-paper-a" class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3"></div>
+                        <div id="modal-paper-b" class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 1: Search Results View -->
+            <div id="tab-results-view" class="flex flex-col gap-6">
+                <div class="flex flex-wrap justify-between items-end gap-3">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-800">Stored Queries</h2>
+                        <p class="text-sm text-slate-500" id="results-meta">Each search is saved in your browser (IndexedDB). Click any bar to list the matching articles.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="text-xs text-slate-500 bg-slate-200 px-3 py-1 rounded-full flex items-center gap-1 shadow-inner">
+                            <i class="ph ph-calendar-blank"></i> Past 5 Years Filter Applied
+                        </div>
+                        <button id="clear-all" class="text-xs text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 px-3 py-1 rounded-full flex items-center gap-1 transition-colors">
+                            <i class="ph ph-trash"></i> Clear all
+                        </button>
+                    </div>
+                </div>
+
+                <div id="queries-container" class="flex flex-col gap-8"></div>
+            </div>
+
+            <!-- Tab 2: Keywords Graph View -->
+            <div id="tab-graph-view" class="hidden flex flex-col gap-4">
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <label for="graph-query-select" class="text-xs font-semibold uppercase text-slate-500 tracking-wider">Stored Query:</label>
+                        <select id="graph-query-select" class="text-sm bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 font-medium"></select>
+                    </div>
+
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs text-slate-600">
+                            <label for="graph-cap-slider" class="font-medium whitespace-nowrap">Top Keywords: <span id="cap-display" class="font-bold text-blue-600">60</span></label>
+                            <input id="graph-cap-slider" type="range" min="10" max="100" step="5" value="60" class="w-24 sm:w-32 accent-blue-600 cursor-pointer">
+                        </div>
+
+                        <label class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs text-slate-600 cursor-pointer select-none">
+                            <input type="checkbox" id="graph-min-weight-toggle" class="rounded text-blue-600 accent-blue-600">
+                            <span>Hide weight &lt; 2</span>
+                        </label>
+
+                        <div class="flex items-center gap-1">
+                            <button id="graph-fit" class="p-1.5 border border-slate-200 hover:bg-slate-100 rounded text-slate-600" title="Fit graph to view">
+                                <i class="ph ph-arrows-out text-base"></i>
+                            </button>
+                            <button id="graph-zoom-in" class="p-1.5 border border-slate-200 hover:bg-slate-100 rounded text-slate-600" title="Zoom in">
+                                <i class="ph ph-magnifying-glass-plus text-base"></i>
+                            </button>
+                            <button id="graph-zoom-out" class="p-1.5 border border-slate-200 hover:bg-slate-100 rounded text-slate-600" title="Zoom out">
+                                <i class="ph ph-magnifying-glass-minus text-base"></i>
+                            </button>
+                            <button id="graph-relayout" class="px-2.5 py-1.5 border border-slate-200 hover:bg-slate-100 rounded text-xs font-medium text-slate-700 flex items-center gap-1" title="Re-run force-directed layout">
+                                <i class="ph ph-arrows-clockwise text-sm"></i> Re-layout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-xs text-slate-600 bg-blue-50/70 border border-blue-200/80 px-4 py-2.5 rounded-lg flex items-center gap-2">
+                    <i class="ph-fill ph-info text-blue-600 text-base flex-shrink-0"></i>
+                    <span><strong>Graph Navigation:</strong> Click any keyword node to run a new PubMed search. Hover over a node to view metadata and highlight co-occurring keywords. Node colors denote modularity-based topic clusters (legend at top-right). Node size and label font scale with weighted co-occurrence strength; edge width reflects pairwise co-occurrence weight.</span>
+                </div>
+
+                <div id="cy-wrapper" class="relative bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden h-[620px] w-full">
+                    <div id="cy" class="w-full h-full"></div>
+                    <div id="graph-empty" class="hidden absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-slate-500 bg-white z-10">
+                        <i class="ph ph-graph text-5xl mb-3 text-slate-300"></i>
+                        <p class="text-base font-semibold text-slate-700" id="graph-empty-title">No Graph Data</p>
+                        <p class="text-sm text-slate-500 mt-1" id="graph-empty-desc">Run a search to populate queries and build the keyword co-occurrence graph.</p>
+                    </div>
+
+                    <!-- Hover Tooltip -->
+                    <div id="graph-tooltip" class="hidden absolute z-20 pointer-events-none bg-slate-900/95 text-white rounded-lg p-2.5 text-xs shadow-xl backdrop-blur-sm flex flex-col gap-1 min-w-[180px] max-w-xs transition-opacity duration-150 border border-slate-700/60"></div>
+
+                    <!-- Collapsible Topic Clusters Legend Overlay -->
+                    <div id="graph-legend" class="hidden absolute top-3 right-3 z-10 bg-white/95 backdrop-blur-sm border border-slate-200 rounded-lg shadow-md w-52 text-xs">
+                        <div class="legend-header px-3 py-2 border-b border-slate-200 flex items-center justify-between font-semibold text-slate-700 cursor-pointer select-none hover:bg-slate-50/80 transition-colors">
+                            <span class="flex items-center gap-1.5"><i class="ph-fill ph-circles-three text-blue-600 text-sm"></i> Topic clusters</span>
+                            <button id="legend-toggle-btn" class="text-slate-400 hover:text-slate-700 text-sm transition-transform" title="Collapse/Expand clusters">
+                                <i class="ph-bold ph-caret-up"></i>
+                            </button>
+                        </div>
+                        <div id="legend-body" class="p-1.5 flex flex-col gap-0.5 max-h-60 overflow-y-auto custom-scrollbar"></div>
+                    </div>
+
+                    <!-- Floating Collapsible Boolean Query Builder Bar -->
+                    <div id="query-builder-bar" class="absolute bottom-3 left-3 right-3 z-30 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-lg transition-all duration-200 text-xs">
+                        <!-- Collapsed Bar View -->
+                        <div id="qb-collapsed-view" class="hidden px-4 py-2 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/60 transition-colors">
+                            <div class="flex items-center gap-2 min-w-0 flex-1">
+                                <span class="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                    <i class="ph-bold ph-tree-structure"></i>
+                                </span>
+                                <span class="font-semibold text-slate-800 whitespace-nowrap">Query Builder:</span>
+                                <span id="qb-collapsed-preview" class="font-mono text-slate-600 truncate max-w-md text-xs italic">Empty (click or drag nodes to build)</span>
+                                <span id="qb-collapsed-count" class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium hidden">0 terms</span>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <button id="qb-expand-btn" class="p-1 hover:bg-slate-200 text-slate-600 rounded transition-colors" title="Expand Query Builder">
+                                    <i class="ph-bold ph-caret-up text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Expanded Full View -->
+                        <div id="qb-expanded-view" class="p-3 flex flex-col gap-2">
+                            <div class="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-100">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                        <i class="ph-bold ph-tree-structure"></i>
+                                    </span>
+                                    <span class="font-bold text-slate-800 whitespace-nowrap">Boolean Query Builder</span>
+                                    <span id="qb-terms-badge" class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-medium whitespace-nowrap">0 terms</span>
+                                    <span class="text-[11px] text-slate-400 truncate hidden md:inline">&middot; Drag nodes or click them to append</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <button id="qb-group-btn" disabled class="px-2 py-1 rounded border border-slate-200 bg-slate-50 text-slate-400 text-xs font-medium flex items-center gap-1 transition-colors hover:enabled:bg-blue-50 hover:enabled:text-blue-700 hover:enabled:border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed" title="Group selected chips in parentheses ( )">
+                                        <i class="ph ph-brackets-round"></i> ( ) Group
+                                    </button>
+                                    <button id="qb-ungroup-btn" disabled class="px-2 py-1 rounded border border-slate-200 bg-slate-50 text-slate-400 text-xs font-medium flex items-center gap-1 transition-colors hover:enabled:bg-amber-50 hover:enabled:text-amber-700 hover:enabled:border-amber-300 disabled:opacity-50 disabled:cursor-not-allowed" title="Remove parentheses from selected chips">
+                                        Ungroup
+                                    </button>
+                                    <button id="qb-clear-btn" class="px-2 py-1 rounded border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-600 text-xs font-medium flex items-center gap-1 transition-colors" title="Clear all chips">
+                                        <i class="ph ph-trash"></i> Clear
+                                    </button>
+                                    <button id="qb-collapse-btn" class="p-1 hover:bg-slate-100 text-slate-500 rounded transition-colors" title="Minimize Query Builder">
+                                        <i class="ph-bold ph-caret-down text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Drop Zone & Chips Flow -->
+                            <div id="qb-drop-zone" class="min-h-[44px] max-h-24 overflow-y-auto bg-slate-50/80 border-2 border-dashed border-slate-200 rounded-lg p-1.5 flex flex-wrap items-center gap-1.5 transition-colors">
+                                <span id="qb-empty-msg" class="text-xs text-slate-400 italic">Drag keywords from graph or click a node to add...</span>
+                            </div>
+
+                            <!-- Bottom Row: Live Boolean String & Actions -->
+                            <div class="flex items-center justify-between gap-3 pt-0.5 flex-wrap sm:flex-nowrap">
+                                <div class="flex items-center gap-2 flex-1 min-w-0">
+                                    <span class="text-slate-400 font-medium text-[11px] whitespace-nowrap">Query:</span>
+                                    <div id="qb-boolean-string" class="font-mono text-xs text-slate-900 bg-slate-50 border border-slate-200 rounded px-2.5 py-1 flex-1 truncate select-all min-w-0" title="Live Boolean Query String"></div>
+                                    <input id="qb-keyword-input" list="qb-keyword-suggestions" placeholder="+ Add keyword..." class="text-xs px-2 py-1 bg-white border border-slate-200 rounded w-28 sm:w-36 focus:outline-none focus:border-blue-500" title="Type keyword and press Enter">
+                                    <datalist id="qb-keyword-suggestions"></datalist>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <button id="qb-copy-btn" class="px-2.5 py-1 border border-slate-200 hover:bg-slate-100 text-slate-700 font-medium rounded-lg flex items-center gap-1 transition-colors" title="Copy Boolean query string">
+                                        <i class="ph ph-copy"></i> <span>Copy</span>
+                                    </button>
+                                    <button id="qb-run-search-btn" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-colors" title="Run PubMed search with this query">
+                                        <i class="ph ph-magnifying-glass"></i> <span>Run Search</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Operator Selection Popover -->
+                        <div id="qb-operator-popover" class="hidden absolute -top-11 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white px-3 py-1.5 rounded-lg shadow-xl backdrop-blur-sm flex items-center gap-2 text-xs border border-slate-700 z-40 select-none">
+                            <span class="text-slate-300 font-medium">Join with:</span>
+                            <div class="flex items-center gap-1">
+                                <button type="button" class="qb-popover-op px-2 py-0.5 rounded font-bold bg-blue-600 text-white hover:bg-blue-500" data-op="AND">AND</button>
+                                <button type="button" class="qb-popover-op px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-200 hover:bg-slate-700" data-op="OR">OR</button>
+                                <button type="button" class="qb-popover-op px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-200 hover:bg-slate-700" data-op="NOT">NOT</button>
+                            </div>
+                            <button id="qb-popover-close" class="text-slate-400 hover:text-white ml-1 font-bold text-sm leading-none">&times;</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Search Primers View -->
+            <div id="tab-primers-view" class="hidden flex flex-col gap-6">
+                <div class="flex flex-wrap justify-between items-end gap-3">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-800">Search Primers</h2>
+                        <p class="text-sm text-slate-500">Curated multi-query research syntheses for high-impact biomedical domains.</p>
+                    </div>
+                    <div class="text-xs text-slate-500 bg-slate-200 px-3 py-1 rounded-full flex items-center gap-1 shadow-inner">
+                        <i class="ph ph-compass"></i> Domain Starter Packs
+                    </div>
+                </div>
+                <div id="primers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </div>
+
+            <!-- Dedicated Primer Full Page (Hash Route #/primers/:topicId) -->
+            <div id="primer-detail-page" class="hidden flex flex-col gap-6"></div>
+        </div>
+    </main>
+
+    <footer class="mt-auto border-t border-slate-200 bg-white py-3 px-4 sm:px-6 lg:px-8 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-slate-700">PubMed ResearchMiner</span>
+                <span>&bull;</span>
+                <span>Biomedical Discovery &amp; Exploration</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="btn-build-info-footer" type="button" class="hover:text-blue-600 transition-colors flex items-center gap-1 cursor-pointer" title="View Version & Build Info">
+                    <i class="ph ph-info"></i>
+                    <span>App Version &amp; Build Info</span>
+                </button>
+            </div>
+        </div>
+    </footer>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
