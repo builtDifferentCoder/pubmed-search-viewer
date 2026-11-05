@@ -97,6 +97,18 @@ pubmed_search_viewer/
 │   ├── ui.js                   # UI tabs, query card renderer, loading overlay, debug panel
 │   ├── main.js                 # Entry point, router, event listeners, window API bindings
 │   └── style.css               # PostCSS/Tailwind styles and self-hosted Phosphor icon fonts
+├── tests/                      # Automated unit and Playwright end-to-end test suites
+│   ├── test_boolean_builder.js
+│   ├── test_divergence_logic.js
+│   ├── test_app.js
+│   ├── test_suite.js
+│   ├── test_phase1.js
+│   ├── test_phase1_query_builder.js
+│   ├── test_phase2.js
+│   ├── test_phase2_divergence.js
+│   ├── test_phase4.js
+│   ├── test_v02_suite.js
+│   └── test_v03_suite.js
 ├── index.html                  # Lightweight application entry markup
 ├── CLIENT_TESTING_GUIDE_WEEK1.md # Client-facing step-by-step test instructions
 ├── run_all_tests.mjs           # Unified end-to-end test runner
@@ -144,17 +156,17 @@ pubmed_search_viewer/
 ## 6. Verification & Test Suites
 
 The test suite covers both unit logic and end-to-end browser workflows:
-1. `test_boolean_builder.js` — Keyword quoting, operator precedence, parentheses balancing.
-2. `test_divergence_logic.js` — Pairwise combinatorial contradiction rules and ranking.
-3. `test_app.js` — Page load, Dexie IndexedDB initialization, and Chart.js instantiation.
-4. `test_suite.js` — Live query card rendering, metric chart data binding, and IndexedDB persistence.
-5. `test_phase1.js` — Graph tab switching, Cytoscape canvas mounting, and layout.
-6. `test_phase1_query_builder.js` — Chip addition, drag-and-drop, grouping, and Boolean compilation.
-7. `test_phase2.js` — Divergence UI component mounting and card controls.
-8. `test_phase2_divergence.js` — Opposing paper detection, shared keyword threshold $N$, side-by-side modal.
-9. `test_phase4.js` — Primer catalog rendering, detail page hash navigation, and caching.
-10. `test_v02_suite.js` — Keyword normalization, study type heuristics, and table filtering.
-11. `test_v03_suite.js` — Cytoscape node degree formulas, Louvain community clusters, and edge opacity.
+1. `tests/test_boolean_builder.js` — Keyword quoting, operator precedence, parentheses balancing.
+2. `tests/test_divergence_logic.js` — Pairwise combinatorial contradiction rules and ranking.
+3. `tests/test_app.js` — Page load, Dexie IndexedDB initialization, and Chart.js instantiation.
+4. `tests/test_suite.js` — Live query card rendering, metric chart data binding, and IndexedDB persistence.
+5. `tests/test_phase1.js` — Graph tab switching, Cytoscape canvas mounting, and layout.
+6. `tests/test_phase1_query_builder.js` — Chip addition, drag-and-drop, grouping, and Boolean compilation.
+7. `tests/test_phase2.js` — Divergence UI component mounting and card controls.
+8. `tests/test_phase2_divergence.js` — Opposing paper detection, shared keyword threshold $N$, side-by-side modal.
+9. `tests/test_phase4.js` — Primer catalog rendering, detail page hash navigation, and caching.
+10. `tests/test_v02_suite.js` — Keyword normalization, study type heuristics, and table filtering.
+11. `tests/test_v03_suite.js` — Cytoscape node degree formulas, Louvain community clusters, and edge opacity.
 
 Run all tests:
 ```bash

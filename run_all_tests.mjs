@@ -117,7 +117,7 @@ async function run() {
 
     try {
         for (const testFile of TEST_FILES) {
-            const testPath = path.join(__dirname, testFile);
+            const testPath = path.join(__dirname, 'tests', testFile);
             if (!fs.existsSync(testPath)) {
                 console.warn(`Warning: test file ${testFile} not found.`);
                 results.push({ name: testFile, status: 'NOT FOUND', duration: 0 });

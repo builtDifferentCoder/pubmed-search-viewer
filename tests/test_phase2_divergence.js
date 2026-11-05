@@ -193,19 +193,19 @@ function getMockResponses() {
     await page.route('**', async (route) => {
         const url = route.request().url();
         if (url.includes('dexie')) {
-            const p = path.join(__dirname, 'node_modules/dexie/dist/dexie.js');
+            const p = path.join(__dirname, '../node_modules/dexie/dist/dexie.js');
             await route.fulfill({ status: 200, contentType: 'application/javascript', body: fs.readFileSync(p) });
         } else if (url.includes('chart')) {
-            const p = path.join(__dirname, 'node_modules/chart.js/dist/chart.umd.js');
+            const p = path.join(__dirname, '../node_modules/chart.js/dist/chart.umd.js');
             await route.fulfill({ status: 200, contentType: 'application/javascript', body: fs.readFileSync(p) });
         } else if (url.includes('cytoscape')) {
-            const p = path.join(__dirname, 'node_modules/cytoscape/dist/cytoscape.min.js');
+            const p = path.join(__dirname, '../node_modules/cytoscape/dist/cytoscape.min.js');
             await route.fulfill({ status: 200, contentType: 'application/javascript', body: fs.readFileSync(p) });
         } else if (url.includes('graphology-library')) {
-            const p = path.join(__dirname, 'node_modules/graphology-library/dist/graphology-library.min.js');
+            const p = path.join(__dirname, '../node_modules/graphology-library/dist/graphology-library.min.js');
             await route.fulfill({ status: 200, contentType: 'application/javascript', body: fs.readFileSync(p) });
         } else if (url.includes('graphology')) {
-            const p = path.join(__dirname, 'node_modules/graphology/dist/graphology.umd.js');
+            const p = path.join(__dirname, '../node_modules/graphology/dist/graphology.umd.js');
             await route.fulfill({ status: 200, contentType: 'application/javascript', body: fs.readFileSync(p) });
         } else if (url.includes('tailwindcss.com')) {
             await route.fulfill({ status: 200, contentType: 'application/javascript', body: "const s = document.createElement('style'); s.textContent = '.hidden { display: none !important; }'; document.head.appendChild(s);" });
