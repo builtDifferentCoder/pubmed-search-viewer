@@ -2,6 +2,7 @@
 import { config, DEFAULT_OPPOSING_CONFIG, COLOR_MAPS } from './config.js';
 import { db } from './db.js';
 import { esc } from './parsers.js';
+import { renderHelpButton } from './help.js';
 
 export function getOpposition(tagA, tagB, opposingConfig = config.DEFAULT_OPPOSING_CONFIG || DEFAULT_OPPOSING_CONFIG) {
     if (!tagA || !tagB || tagA === 'None' || tagB === 'None') {
@@ -153,7 +154,8 @@ export function openDivergenceCompareModal(pair, queryId) {
             <span class="font-bold text-slate-700">Opposition:</span>
             <span class="px-2 py-0.5 rounded text-xs font-bold ${pair.oppositionStrength === 1.0 ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
                 ${esc(pair.oppositionLabel)}
-            </span>`;
+            </span>
+            ${renderHelpButton('divergence_opposition_badge')}`;
     }
 
     if (colA) colA.innerHTML = renderPaperDetailsHtml(pair.paperA, pair.tagA, pair.sharedKeywords);
@@ -263,6 +265,7 @@ export async function renderDivergencePanel(card, queryId, currentN = 2, page = 
                     <span class="px-2 py-0.5 rounded text-[11px] font-bold ${pair.oppositionStrength === 1.0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
                         ${esc(pair.oppositionLabel)}
                     </span>
+                    ${renderHelpButton('divergence_opposition_badge')}
                     <button class="divergence-compare-btn px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-md font-medium text-xs flex items-center gap-1 transition-colors" data-global-idx="${globalIdx}">
                         <i class="ph ph-columns"></i> Side-by-Side
                     </button>

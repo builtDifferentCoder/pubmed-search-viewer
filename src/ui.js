@@ -7,6 +7,7 @@ import { buildQueryMetrics, fetchSubset, initCardCharts, destroyAllCharts } from
 import { renderKeywordsGraph } from './graph.js';
 import { initDivergencePanelForCard } from './divergence.js';
 import { renderPrimersGrid } from './primers.js';
+import { renderHelpButton } from './help.js';
 
 export let currentActiveTab = 'results';
 
@@ -196,11 +197,13 @@ export async function renderQueryCard(q) {
                         <i class="ph-bold ph-arrows-split"></i>
                     </span>
                     <span class="text-xs font-bold text-slate-800">Contradiction Mapping (Divergence)</span>
+                    ${renderHelpButton('divergence')}
                     <span class="divergence-badge px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[11px] font-semibold">0 pairs</span>
                 </div>
                 <div class="flex items-center gap-3 text-xs">
                     <label class="flex items-center gap-1.5 text-slate-600 font-medium">
                         <span>Min Shared (N):</span>
+                        ${renderHelpButton('divergence_min_shared')}
                         <select class="divergence-n-select border border-slate-200 bg-white rounded px-2 py-0.5 text-xs font-semibold focus:outline-none focus:border-blue-500">
                             <option value="1">1</option>
                             <option value="2" selected>2 (Default)</option>
@@ -225,15 +228,30 @@ export async function renderQueryCard(q) {
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-slate-50/70 border border-slate-200 rounded-lg p-3 flex flex-col">
-                        <h4 class="text-xs font-semibold text-slate-700 mb-2 truncate">${esc(chartDefs[0].title)}</h4>
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <h4 class="text-xs font-semibold text-slate-700 truncate">${esc(chartDefs[0].title)}</h4>
+                            ${renderHelpButton('chart_total')}
+                        </div>
                         <div class="relative h-44 w-full"><canvas id="canvas-${q.id}-0"></canvas></div>
                     </div>
                     <div class="bg-slate-50/70 border border-slate-200 rounded-lg p-3 flex flex-col">
-                        <h4 class="text-xs font-semibold text-slate-700 mb-2 truncate">${esc(chartDefs[1].title)}</h4>
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <h4 class="text-xs font-semibold text-slate-700 truncate">${esc(chartDefs[1].title)}</h4>
+                            <div class="flex items-center gap-0.5">
+                                ${renderHelpButton('chart_conclusion')}
+                                ${renderHelpButton('conclusion_tags')}
+                            </div>
+                        </div>
                         <div class="relative h-44 w-full"><canvas id="canvas-${q.id}-1"></canvas></div>
                     </div>
                     <div class="bg-slate-50/70 border border-slate-200 rounded-lg p-3 flex flex-col">
-                        <h4 class="text-xs font-semibold text-slate-700 mb-2 truncate">${esc(chartDefs[2].title)}</h4>
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <h4 class="text-xs font-semibold text-slate-700 truncate">${esc(chartDefs[2].title)}</h4>
+                            <div class="flex items-center gap-0.5">
+                                ${renderHelpButton('chart_sample_size')}
+                                ${renderHelpButton('sample_size_buckets')}
+                            </div>
+                        </div>
                         <div class="relative h-44 w-full"><canvas id="canvas-${q.id}-2"></canvas></div>
                     </div>
                 </div>
@@ -245,19 +263,31 @@ export async function renderQueryCard(q) {
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-slate-50/70 border border-slate-200 rounded-lg p-3 flex flex-col">
-                        <h4 class="text-xs font-semibold text-slate-700 mb-2 truncate">${esc(chartDefs[3].title)}</h4>
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <h4 class="text-xs font-semibold text-slate-700 truncate">${esc(chartDefs[3].title)}</h4>
+                            ${renderHelpButton('chart_citations')}
+                        </div>
                         <div class="relative h-44 w-full"><canvas id="canvas-${q.id}-3"></canvas></div>
                     </div>
                     <div class="bg-slate-50/70 border border-slate-200 rounded-lg p-3 flex flex-col">
-                        <h4 class="text-xs font-semibold text-slate-700 mb-2 truncate">${esc(chartDefs[4].title)}</h4>
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <h4 class="text-xs font-semibold text-slate-700 truncate">${esc(chartDefs[4].title)}</h4>
+                            ${renderHelpButton('chart_study_type')}
+                        </div>
                         <div class="relative h-44 w-full"><canvas id="canvas-${q.id}-4"></canvas></div>
                     </div>
                     <div class="bg-slate-50/70 border border-slate-200 rounded-lg p-3 flex flex-col">
-                        <h4 class="text-xs font-semibold text-slate-700 mb-2 truncate">${esc(chartDefs[5].title)}</h4>
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <h4 class="text-xs font-semibold text-slate-700 truncate">${esc(chartDefs[5].title)}</h4>
+                            ${renderHelpButton('chart_subject_type')}
+                        </div>
                         <div class="relative h-44 w-full"><canvas id="canvas-${q.id}-5"></canvas></div>
                     </div>
                     <div class="bg-slate-50/70 border border-slate-200 rounded-lg p-3 flex flex-col">
-                        <h4 class="text-xs font-semibold text-slate-700 mb-2 truncate">${esc(chartDefs[6].title)}</h4>
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <h4 class="text-xs font-semibold text-slate-700 truncate">${esc(chartDefs[6].title)}</h4>
+                            ${renderHelpButton('chart_pub_year')}
+                        </div>
                         <div class="relative h-44 w-full"><canvas id="canvas-${q.id}-6"></canvas></div>
                     </div>
                 </div>
@@ -269,7 +299,10 @@ export async function renderQueryCard(q) {
                 </div>
                 <div class="grid grid-cols-1 gap-4">
                     <div class="bg-slate-50/70 border border-slate-200 rounded-lg p-3 flex flex-col">
-                        <h4 class="text-xs font-semibold text-slate-700 mb-2 truncate">${esc(chartDefs[7].title)}</h4>
+                        <div class="flex items-center justify-between gap-1 mb-2">
+                            <h4 class="text-xs font-semibold text-slate-700 truncate">${esc(chartDefs[7].title)}</h4>
+                            ${renderHelpButton('chart_keywords')}
+                        </div>
                         <div class="relative h-52 w-full"><canvas id="canvas-${q.id}-7"></canvas></div>
                     </div>
                 </div>

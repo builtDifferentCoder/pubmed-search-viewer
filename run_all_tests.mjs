@@ -21,7 +21,8 @@ const TEST_FILES = [
     'test_phase2_divergence.js',
     'test_phase4.js',
     'test_v02_suite.js',
-    'test_v03_suite.js'
+    'test_v03_suite.js',
+    'test_help.js'
 ];
 
 function checkServerReady(url, timeoutMs = 1000) {

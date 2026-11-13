@@ -42,6 +42,10 @@
                 </button>
             </div>
             <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 pb-2">
+                <button id="btn-replay-tour" type="button" class="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-full text-blue-700 font-medium transition-colors cursor-pointer" title="Replay 3-step feature tour">
+                    <i class="ph-bold ph-compass"></i>
+                    <span>Replay Tour</span>
+                </button>
                 <button id="btn-build-info" type="button" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-full text-slate-600 transition-colors cursor-pointer" title="View Version & Build Info">
                     <i class="ph ph-info"></i>
                     <span>v0.4.0 Build Info</span>
@@ -120,14 +124,24 @@
 
                     <div class="flex items-center gap-4 flex-wrap">
                         <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs text-slate-600">
-                            <label for="graph-cap-slider" class="font-medium whitespace-nowrap">Top Keywords: <span id="cap-display" class="font-bold text-blue-600">60</span></label>
+                            <div class="flex items-center gap-1">
+                                <label for="graph-cap-slider" class="font-medium whitespace-nowrap">Top Keywords: <span id="cap-display" class="font-bold text-blue-600">60</span></label>
+                                <button type="button" class="help-popover-btn inline-flex items-center justify-center w-11 h-11 -my-3 -mx-2.5 text-slate-400 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-full transition-colors cursor-pointer flex-shrink-0 align-middle" data-help-id="graph_top_slider" aria-label="Help: Top Keywords Cap" aria-haspopup="dialog" aria-expanded="false" tabindex="0">
+                                    <span class="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-serif font-bold italic leading-none pointer-events-none select-none">i</span>
+                                </button>
+                            </div>
                             <input id="graph-cap-slider" type="range" min="10" max="100" step="5" value="60" class="w-24 sm:w-32 accent-blue-600 cursor-pointer">
                         </div>
 
-                        <label class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs text-slate-600 cursor-pointer select-none">
-                            <input type="checkbox" id="graph-min-weight-toggle" class="rounded text-blue-600 accent-blue-600">
-                            <span>Hide weight &lt; 2</span>
-                        </label>
+                        <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs text-slate-600 select-none">
+                            <label class="flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" id="graph-min-weight-toggle" class="rounded text-blue-600 accent-blue-600">
+                                <span>Hide weight &lt; 2</span>
+                            </label>
+                            <button type="button" class="help-popover-btn inline-flex items-center justify-center w-11 h-11 -my-3 -mx-2.5 text-slate-400 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-full transition-colors cursor-pointer flex-shrink-0 align-middle" data-help-id="graph_min_weight" aria-label="Help: Hide Weight < 2 Filter" aria-haspopup="dialog" aria-expanded="false" tabindex="0">
+                                <span class="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-serif font-bold italic leading-none pointer-events-none select-none">i</span>
+                            </button>
+                        </div>
 
                         <div class="flex items-center gap-1">
                             <button id="graph-fit" class="p-1.5 border border-slate-200 hover:bg-slate-100 rounded text-slate-600" title="Fit graph to view">
@@ -139,16 +153,26 @@
                             <button id="graph-zoom-out" class="p-1.5 border border-slate-200 hover:bg-slate-100 rounded text-slate-600" title="Zoom out">
                                 <i class="ph ph-magnifying-glass-minus text-base"></i>
                             </button>
-                            <button id="graph-relayout" class="px-2.5 py-1.5 border border-slate-200 hover:bg-slate-100 rounded text-xs font-medium text-slate-700 flex items-center gap-1" title="Re-run force-directed layout">
-                                <i class="ph ph-arrows-clockwise text-sm"></i> Re-layout
-                            </button>
+                            <div class="flex items-center gap-0.5">
+                                <button id="graph-relayout" class="px-2.5 py-1.5 border border-slate-200 hover:bg-slate-100 rounded text-xs font-medium text-slate-700 flex items-center gap-1" title="Re-run force-directed layout">
+                                    <i class="ph ph-arrows-clockwise text-sm"></i> Re-layout
+                                </button>
+                                <button type="button" class="help-popover-btn inline-flex items-center justify-center w-11 h-11 -my-3 -mx-2.5 text-slate-400 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-full transition-colors cursor-pointer flex-shrink-0 align-middle" data-help-id="graph_relayout" aria-label="Help: Force-Directed Re-layout" aria-haspopup="dialog" aria-expanded="false" tabindex="0">
+                                    <span class="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-serif font-bold italic leading-none pointer-events-none select-none">i</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="text-xs text-slate-600 bg-blue-50/70 border border-blue-200/80 px-4 py-2.5 rounded-lg flex items-center gap-2">
-                    <i class="ph-fill ph-info text-blue-600 text-base flex-shrink-0"></i>
-                    <span><strong>Graph Navigation:</strong> Click any keyword node to run a new PubMed search. Hover over a node to view metadata and highlight co-occurring keywords. Node colors denote modularity-based topic clusters (legend at top-right). Node size and label font scale with weighted co-occurrence strength; edge width reflects pairwise co-occurrence weight.</span>
+                <div class="text-xs text-slate-600 bg-blue-50/70 border border-blue-200/80 px-4 py-2.5 rounded-lg flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <i class="ph-fill ph-info text-blue-600 text-base flex-shrink-0"></i>
+                        <span><strong>Graph Navigation:</strong> Click any keyword node to run a new PubMed search. Hover over a node to view metadata and highlight co-occurring keywords. Node colors denote modularity-based topic clusters (legend at top-right). Node size and label font scale with weighted co-occurrence strength; edge width reflects pairwise co-occurrence weight.</span>
+                    </div>
+                    <button type="button" class="help-popover-btn inline-flex items-center justify-center w-11 h-11 -my-3 -mx-2.5 text-blue-500 hover:text-blue-700 focus:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-full transition-colors cursor-pointer flex-shrink-0 align-middle" data-help-id="weight" aria-label="Help: Co-occurrence Weight & Weighted Degree" aria-haspopup="dialog" aria-expanded="false" tabindex="0">
+                        <span class="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-serif font-bold italic leading-none pointer-events-none select-none">i</span>
+                    </button>
                 </div>
 
                 <div id="cy-wrapper" class="relative bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden h-[620px] w-full">
@@ -163,9 +187,15 @@
                     <div id="graph-tooltip" class="hidden absolute z-20 pointer-events-none bg-slate-900/95 text-white rounded-lg p-2.5 text-xs shadow-xl backdrop-blur-sm flex flex-col gap-1 min-w-[180px] max-w-xs transition-opacity duration-150 border border-slate-700/60"></div>
 
                     <!-- Collapsible Topic Clusters Legend Overlay -->
-                    <div id="graph-legend" class="hidden absolute top-3 right-3 z-10 bg-white/95 backdrop-blur-sm border border-slate-200 rounded-lg shadow-md w-52 text-xs">
+                    <div id="graph-legend" class="hidden absolute top-3 right-3 z-10 bg-white/95 backdrop-blur-sm border border-slate-200 rounded-lg shadow-md w-56 text-xs">
                         <div class="legend-header px-3 py-2 border-b border-slate-200 flex items-center justify-between font-semibold text-slate-700 cursor-pointer select-none hover:bg-slate-50/80 transition-colors">
-                            <span class="flex items-center gap-1.5"><i class="ph-fill ph-circles-three text-blue-600 text-sm"></i> Topic clusters</span>
+                            <span class="flex items-center gap-1">
+                                <i class="ph-fill ph-circles-three text-blue-600 text-sm"></i>
+                                <span>Topic clusters</span>
+                                <button type="button" class="help-popover-btn inline-flex items-center justify-center w-11 h-11 -my-3 -mx-2 text-slate-400 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-full transition-colors cursor-pointer flex-shrink-0 align-middle" data-help-id="graph_cluster_legend" aria-label="Help: Topic Clusters (Louvain Communities)" aria-haspopup="dialog" aria-expanded="false" tabindex="0">
+                                    <span class="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-serif font-bold italic leading-none pointer-events-none select-none">i</span>
+                                </button>
+                            </span>
                             <button id="legend-toggle-btn" class="text-slate-400 hover:text-slate-700 text-sm transition-transform" title="Collapse/Expand clusters">
                                 <i class="ph-bold ph-caret-up"></i>
                             </button>
@@ -194,12 +224,15 @@
 
                         <!-- Expanded Full View -->
                         <div id="qb-expanded-view" class="p-3 flex flex-col gap-2">
-                            <div class="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-100">
-                                <div class="flex items-center gap-2 min-w-0">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-slate-100">
+                                <div class="flex items-center gap-1.5 min-w-0">
                                     <span class="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
                                         <i class="ph-bold ph-tree-structure"></i>
                                     </span>
                                     <span class="font-bold text-slate-800 whitespace-nowrap">Boolean Query Builder</span>
+                                    <button type="button" class="help-popover-btn inline-flex items-center justify-center w-11 h-11 -my-3 -mx-2 text-slate-400 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-full transition-colors cursor-pointer flex-shrink-0 align-middle" data-help-id="query_builder" aria-label="Help: Drag-and-Drop & Tap Boolean Query Builder" aria-haspopup="dialog" aria-expanded="false" tabindex="0">
+                                        <span class="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-serif font-bold italic leading-none pointer-events-none select-none">i</span>
+                                    </button>
                                     <span id="qb-terms-badge" class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-medium whitespace-nowrap">0 terms</span>
                                     <span class="text-[11px] text-slate-400 truncate hidden md:inline">&middot; Drag nodes or click them to append</span>
                                 </div>
@@ -232,13 +265,18 @@
                                     <input id="qb-keyword-input" list="qb-keyword-suggestions" placeholder="+ Add keyword..." class="text-xs px-2 py-1 bg-white border border-slate-200 rounded w-28 sm:w-36 focus:outline-none focus:border-blue-500" title="Type keyword and press Enter">
                                     <datalist id="qb-keyword-suggestions"></datalist>
                                 </div>
-                                <div class="flex items-center gap-2 flex-shrink-0">
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
                                     <button id="qb-copy-btn" class="px-2.5 py-1 border border-slate-200 hover:bg-slate-100 text-slate-700 font-medium rounded-lg flex items-center gap-1 transition-colors" title="Copy Boolean query string">
                                         <i class="ph ph-copy"></i> <span>Copy</span>
                                     </button>
-                                    <button id="qb-run-search-btn" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-colors" title="Run PubMed search with this query">
-                                        <i class="ph ph-magnifying-glass"></i> <span>Run Search</span>
-                                    </button>
+                                    <div class="flex items-center gap-0.5">
+                                        <button id="qb-run-search-btn" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-colors" title="Run PubMed search with this query">
+                                            <i class="ph ph-magnifying-glass"></i> <span>Run Search</span>
+                                        </button>
+                                        <button type="button" class="help-popover-btn inline-flex items-center justify-center w-11 h-11 -my-3 -mx-2 text-slate-400 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-full transition-colors cursor-pointer flex-shrink-0 align-middle" data-help-id="query_builder_run" aria-label="Help: Run Boolean Search" aria-haspopup="dialog" aria-expanded="false" tabindex="0">
+                                            <span class="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-serif font-bold italic leading-none pointer-events-none select-none">i</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -261,7 +299,12 @@
             <div id="tab-primers-view" class="hidden flex flex-col gap-6">
                 <div class="flex flex-wrap justify-between items-end gap-3">
                     <div>
-                        <h2 class="text-lg font-semibold text-slate-800">Search Primers</h2>
+                        <div class="flex items-center gap-1">
+                            <h2 class="text-lg font-semibold text-slate-800">Search Primers</h2>
+                            <button type="button" class="help-popover-btn inline-flex items-center justify-center w-11 h-11 -my-3 -mx-2.5 text-slate-400 hover:text-blue-600 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-full transition-colors cursor-pointer flex-shrink-0 align-middle" data-help-id="primers" aria-label="Help: How Search Primers Work" aria-haspopup="dialog" aria-expanded="false" tabindex="0">
+                                <span class="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-serif font-bold italic leading-none pointer-events-none select-none">i</span>
+                            </button>
+                        </div>
                         <p class="text-sm text-slate-500">Curated multi-query research syntheses for high-impact biomedical domains.</p>
                     </div>
                     <div class="text-xs text-slate-500 bg-slate-200 px-3 py-1 rounded-full flex items-center gap-1 shadow-inner">
@@ -284,6 +327,10 @@
                 <span>Biomedical Discovery &amp; Exploration</span>
             </div>
             <div class="flex items-center gap-3">
+                <button id="btn-replay-tour-footer" type="button" class="hover:text-blue-600 transition-colors flex items-center gap-1 cursor-pointer" title="Replay 3-step feature tour">
+                    <i class="ph-bold ph-compass"></i>
+                    <span>Replay Tour</span>
+                </button>
                 <button id="btn-build-info-footer" type="button" class="hover:text-blue-600 transition-colors flex items-center gap-1 cursor-pointer" title="View Version & Build Info">
                     <i class="ph ph-info"></i>
                     <span>App Version &amp; Build Info</span>

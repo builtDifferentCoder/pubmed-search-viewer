@@ -1,5 +1,6 @@
 // Configuration and Tunable Constants for PubMed ResearchMiner
 // Ground Rule 2: All tunable constants live in this one config object.
+import { HELP_TEXT } from './help.js';
 
 const envApiKey = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_NCBI_API_KEY) ? import.meta.env.VITE_NCBI_API_KEY : '';
 const envTool = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_NCBI_TOOL) ? import.meta.env.VITE_NCBI_TOOL : 'pubmed_research_miner';
@@ -158,6 +159,9 @@ export const config = {
     // App Version & Build Information
     APP_VERSION: appVersion,
     BUILD_TIME: buildTime,
+
+    // In-App Help & Explanation Dictionary (Phase 0 / HelpPopover)
+    HELP_TEXT: HELP_TEXT,
 };
 
 // Export individual constants for convenient named imports & legacy compatibility
@@ -198,10 +202,12 @@ export const COLOR_MAPS = config.COLOR_MAPS;
 export const DEFAULT_OPPOSING_CONFIG = config.DEFAULT_OPPOSING_CONFIG;
 export const MAX_DIVERGENCE_PAIRS = config.MAX_DIVERGENCE_PAIRS;
 export const DIVERGENCE_PAGE_SIZE = config.DIVERGENCE_PAGE_SIZE;
+export { HELP_TEXT };
 
 // Expose on window for runtime and test verification
 if (typeof window !== 'undefined') {
     window.config = config;
+    window.HELP_TEXT = HELP_TEXT;
     window.GRAPH_MIN_RADIUS = GRAPH_MIN_RADIUS;
     window.GRAPH_MAX_RADIUS = GRAPH_MAX_RADIUS;
     window.GRAPH_MIN_FONT = GRAPH_MIN_FONT;

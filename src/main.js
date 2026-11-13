@@ -13,6 +13,7 @@ import * as builder from './builder.js';
 import * as divergence from './divergence.js';
 import * as primers from './primers.js';
 import * as ui from './ui.js';
+import * as help from './help.js';
 
 // Attach all functions and objects to window for tests and runtime compatibility
 if (typeof window !== 'undefined') {
@@ -26,6 +27,7 @@ if (typeof window !== 'undefined') {
     Object.assign(window, divergence);
     Object.assign(window, primers);
     Object.assign(window, ui);
+    Object.assign(window, help);
 }
 
 async function handleRoute() {
@@ -176,18 +178,29 @@ function initEventHandlers() {
         });
     }
 
+    const btnReplayTour = document.getElementById('btn-replay-tour');
+    if (btnReplayTour) {
+        btnReplayTour.addEventListener('click', () => help.initCoachmark(true));
+    }
+    const btnReplayTourFooter = document.getElementById('btn-replay-tour-footer');
+    if (btnReplayTourFooter) {
+        btnReplayTourFooter.addEventListener('click', () => help.initCoachmark(true));
+    }
+
     window.addEventListener('hashchange', handleRoute);
 }
 
 // App Initialization
 async function initApp() {
     initEventHandlers();
+    help.initHelpPopovers();
     builder.BooleanQueryBuilder.init();
     primers.renderPrimersGrid();
     ui.initDebugPanel();
 
     try {
         await ui.renderAll();
+        help.initCoachmark();
         if (window.location.hash) {
             await handleRoute();
         } else {
@@ -218,5 +231,6 @@ export default {
     builder,
     divergence,
     primers,
-    ui
+    ui,
+    help
 };
