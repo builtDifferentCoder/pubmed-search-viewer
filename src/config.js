@@ -162,6 +162,15 @@ export const config = {
 
     // In-App Help & Explanation Dictionary (Phase 0 / HelpPopover)
     HELP_TEXT: HELP_TEXT,
+
+    // Mobile Layout & Responsive Tuning Constants (Phase 0 / Mobile App)
+    MOBILE_BREAKPOINT: 768,
+    DEFAULT_OPEN_ACCORDION: 'articles',
+    CAROUSEL_PEEK_WIDTH_PERCENT: 88,
+    BOTTOM_SHEET_PAGE_SIZE: 5,
+    PULL_TO_REFRESH_THRESHOLD_PX: 70,
+    LONG_PRESS_MS: 400,
+    MOBILE_CHART_FONT_SIZE: 11,
 };
 
 // Export individual constants for convenient named imports & legacy compatibility
@@ -202,6 +211,13 @@ export const COLOR_MAPS = config.COLOR_MAPS;
 export const DEFAULT_OPPOSING_CONFIG = config.DEFAULT_OPPOSING_CONFIG;
 export const MAX_DIVERGENCE_PAIRS = config.MAX_DIVERGENCE_PAIRS;
 export const DIVERGENCE_PAGE_SIZE = config.DIVERGENCE_PAGE_SIZE;
+export const MOBILE_BREAKPOINT = config.MOBILE_BREAKPOINT;
+export const DEFAULT_OPEN_ACCORDION = config.DEFAULT_OPEN_ACCORDION;
+export const CAROUSEL_PEEK_WIDTH_PERCENT = config.CAROUSEL_PEEK_WIDTH_PERCENT;
+export const BOTTOM_SHEET_PAGE_SIZE = config.BOTTOM_SHEET_PAGE_SIZE;
+export const PULL_TO_REFRESH_THRESHOLD_PX = config.PULL_TO_REFRESH_THRESHOLD_PX;
+export const LONG_PRESS_MS = config.LONG_PRESS_MS;
+export const MOBILE_CHART_FONT_SIZE = config.MOBILE_CHART_FONT_SIZE;
 export { HELP_TEXT };
 
 // Expose on window for runtime and test verification

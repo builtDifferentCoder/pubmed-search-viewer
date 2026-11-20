@@ -381,12 +381,16 @@ function getMockResponses() {
     ];
 
     for (const item of testTriggers) {
-        if (item.tab === 'primers') await page.click('#tab-primers-btn');
-        else if (item.tab === 'graph') await page.click('#tab-graph-btn');
-        else if (item.tab === 'results') await page.click('#tab-results-btn');
+        const tabSelector = (await page.locator(`#mobile-tab-${item.tab}-btn`).isVisible())
+            ? `#mobile-tab-${item.tab}-btn`
+            : `#tab-${item.tab}-btn`;
+        await page.click(tabSelector);
         await page.waitForTimeout(300);
 
-        const btn = page.locator(`[data-help-id="${item.id}"]`).first();
+        let btn = page.locator(`[data-help-id="${item.id}"]:visible`).first();
+        if (await btn.count() === 0) {
+            btn = page.locator(`[data-help-id="${item.id}"]`).first();
+        }
         await btn.scrollIntoViewIfNeeded();
         await btn.click({ force: true });
         await page.waitForTimeout(200);

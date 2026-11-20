@@ -21,3 +21,33 @@ body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+/* Mobile Carousel Scroll-Snap Utilities */
+.carousel-track {
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+.carousel-slide {
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Safe-area insets support */
+.safe-area-bottom {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+/* Hide top tabs nav bar on mobile (< 768px) where bottom tab bar replaces it */
+@media (max-width: 767px) {
+    #tabs-nav-bar {
+        display: none !important;
+    }
+}

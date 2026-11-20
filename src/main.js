@@ -110,6 +110,29 @@ function initEventHandlers() {
         });
     }
 
+    const mobileTabResultsBtn = document.getElementById('mobile-tab-results-btn');
+    const mobileTabGraphBtn = document.getElementById('mobile-tab-graph-btn');
+    const mobileTabPrimersBtn = document.getElementById('mobile-tab-primers-btn');
+
+    if (mobileTabResultsBtn) {
+        mobileTabResultsBtn.addEventListener('click', () => {
+            if (window.location.hash.startsWith('#/primers/')) window.location.hash = '';
+            ui.switchTab('results');
+        });
+    }
+    if (mobileTabGraphBtn) {
+        mobileTabGraphBtn.addEventListener('click', () => {
+            if (window.location.hash.startsWith('#/primers/')) window.location.hash = '';
+            ui.switchTab('graph');
+        });
+    }
+    if (mobileTabPrimersBtn) {
+        mobileTabPrimersBtn.addEventListener('click', () => {
+            if (window.location.hash.startsWith('#/primers/')) window.location.hash = '#/primers';
+            ui.switchTab('primers');
+        });
+    }
+
     if (graphQuerySelect) {
         graphQuerySelect.addEventListener('change', () => {
             const queryId = parseInt(graphQuerySelect.value, 10);
@@ -197,6 +220,8 @@ async function initApp() {
     builder.BooleanQueryBuilder.init();
     primers.renderPrimersGrid();
     ui.initDebugPanel();
+    ui.initPullToRefresh();
+    ui.initMobileBottomSheetHandlers();
 
     try {
         await ui.renderAll();

@@ -26,7 +26,7 @@
         </div>
     </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8 flex flex-col gap-6">
 
         <!-- Top-level Navigation Tabs -->
         <div id="tabs-nav-bar" class="flex items-center justify-between border-b border-slate-200">
@@ -96,6 +96,12 @@
 
             <!-- Tab 1: Search Results View -->
             <div id="tab-results-view" class="flex flex-col gap-6">
+                <!-- Mobile Pull-to-Refresh Indicator -->
+                <div id="pull-to-refresh-indicator" class="hidden -mt-4 mb-1 flex items-center justify-center gap-2 text-xs font-semibold text-blue-600 transition-all select-none py-1">
+                    <i id="ptr-icon" class="ph ph-arrow-down text-base transition-transform duration-200"></i>
+                    <span id="ptr-text">Pull down to refresh...</span>
+                </div>
+
                 <div class="flex flex-wrap justify-between items-end gap-3">
                     <div>
                         <h2 class="text-lg font-semibold text-slate-800">Stored Queries</h2>
@@ -338,6 +344,54 @@
             </div>
         </div>
     </footer>
+
+    <!-- Mobile Bottom Sheet for Bar Tap Article List -->
+    <div id="mobile-bottom-sheet-backdrop" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end justify-center transition-opacity duration-200">
+        <div id="mobile-bottom-sheet" class="bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 w-full max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+            <!-- Drag Handle -->
+            <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2.5 flex-shrink-0 cursor-grab"></div>
+
+            <!-- Header -->
+            <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-3 bg-slate-50/70">
+                <div class="min-w-0">
+                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Filtered Articles</div>
+                    <h3 id="bottom-sheet-title" class="text-sm font-bold text-slate-900 truncate">Articles</h3>
+                </div>
+                <button id="bottom-sheet-close-btn" type="button" class="w-9 h-9 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-lg transition-colors cursor-pointer" aria-label="Close bottom sheet">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Article List (Paged / Virtualized) -->
+            <div id="bottom-sheet-body" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar bg-slate-50/30"></div>
+
+            <!-- Pagination Footer -->
+            <div id="bottom-sheet-pagination" class="px-5 py-3 border-t border-slate-200 bg-white flex items-center justify-between text-xs text-slate-600 flex-shrink-0 safe-area-bottom">
+                <span id="bottom-sheet-page-info" class="font-medium">Page 1 of 1</span>
+                <div class="flex items-center gap-2">
+                    <button id="bottom-sheet-prev-btn" type="button" class="px-3 py-1.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-lg font-medium text-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Previous</button>
+                    <button id="bottom-sheet-next-btn" type="button" class="px-3 py-1.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-lg font-medium text-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Sticky Bottom Tab Bar (< 768px, safe-area aware) -->
+    <nav id="mobile-bottom-nav" class="flex md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-1 items-center justify-around shadow-lg safe-area-bottom select-none">
+        <button id="mobile-tab-results-btn" type="button" class="mobile-tab-btn flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-lg text-xs font-bold text-blue-600 transition-colors min-h-[48px] cursor-pointer" data-tab="results">
+            <i class="ph-fill ph-chart-bar text-xl mb-0.5"></i>
+            <span class="text-[11px] leading-tight">Results</span>
+        </button>
+        <button id="mobile-tab-graph-btn" type="button" class="mobile-tab-btn flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors min-h-[48px] cursor-pointer" data-tab="graph">
+            <i class="ph-fill ph-graph text-xl mb-0.5"></i>
+            <span class="text-[11px] leading-tight">Graph</span>
+        </button>
+        <button id="mobile-tab-primers-btn" type="button" class="mobile-tab-btn flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors min-h-[48px] cursor-pointer" data-tab="primers">
+            <i class="ph-fill ph-compass text-xl mb-0.5"></i>
+            <span class="text-[11px] leading-tight">Primers</span>
+        </button>
+    </nav>
+
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>
