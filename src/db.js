@@ -41,6 +41,10 @@ db.version(3).stores({
     primerRuns: 'topicId'
 });
 
+db.version(4).stores({
+    graphLayouts: 'id, queryId, cap, minWeight'
+});
+
 if (typeof window !== 'undefined') {
     window.db = db;
     window.Dexie = Dexie;

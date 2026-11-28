@@ -23,7 +23,8 @@ const TEST_FILES = [
     'test_v02_suite.js',
     'test_v03_suite.js',
     'test_help.js',
-    'test_mobile_layout.js'
+    'test_mobile_layout.js',
+    'test_graph_touch.js'
 ];
 
 function checkServerReady(url, timeoutMs = 1000) {

@@ -61,6 +61,7 @@ export const BooleanQueryBuilder = {
         const groupBtn = document.getElementById('qb-group-btn');
         const ungroupBtn = document.getElementById('qb-ungroup-btn');
         const copyBtn = document.getElementById('qb-copy-btn');
+        const shareBtn = document.getElementById('qb-share-btn');
         const runSearchBtn = document.getElementById('qb-run-search-btn');
         const popoverClose = document.getElementById('qb-popover-close');
         const popoverOps = document.querySelectorAll('.qb-popover-op');
@@ -77,6 +78,11 @@ export const BooleanQueryBuilder = {
         if (groupBtn) groupBtn.addEventListener('click', () => this.groupSelected());
         if (ungroupBtn) ungroupBtn.addEventListener('click', () => this.ungroupSelected());
         if (copyBtn) copyBtn.addEventListener('click', () => this.copy());
+        if (shareBtn) shareBtn.addEventListener('click', () => {
+            if (window.showNotification) {
+                window.showNotification('Query sharing will be available in an upcoming update.', 'info');
+            }
+        });
         if (runSearchBtn) runSearchBtn.addEventListener('click', () => this.runSearch());
 
         if (popoverClose) {
@@ -544,6 +550,7 @@ export const BooleanQueryBuilder = {
                 });
             };
 
+            chip.querySelector('.qb-chip-text').addEventListener('click', handleEdit);
             chip.querySelector('.qb-chip-text').addEventListener('dblclick', handleEdit);
             chip.querySelector('.qb-chip-edit').addEventListener('click', handleEdit);
 

@@ -9,15 +9,247 @@ import { esc } from './parsers.js';
 export let activeCytoscape = null;
 let activeClusterFilter = null;
 let lastDropTimestamp = 0;
+let lastBackgroundTapTime = 0;
+let lastBackgroundTapPos = { x: 0, y: 0 };
+let longPressTimer = null;
+let longPressTriggered = false;
+let touchStartPos = { x: 0, y: 0 };
+
+export function hitTestNodesAtPoint(renderedPoint, nodesList, hitRadius = config.GRAPH_TOUCH_HIT_RADIUS || 24, ambiguityThreshold = config.GRAPH_AMBIGUITY_THRESHOLD || 8) {
+    if (!renderedPoint || !nodesList) return null;
+    const candidates = [];
+    const px = renderedPoint.x;
+    const py = renderedPoint.y;
+
+    const list = Array.isArray(nodesList) ? nodesList : (typeof nodesList.toArray === 'function' ? nodesList.toArray() : Array.from(nodesList));
+
+    list.forEach(n => {
+        let pos = null;
+        let r = config.GRAPH_MIN_RADIUS;
+        let id = '';
+        let label = '';
+
+        if (typeof n.renderedPosition === 'function') {
+            pos = n.renderedPosition();
+            r = (typeof n.renderedWidth === 'function') ? (n.renderedWidth() / 2) : (n.data('radius') || config.GRAPH_MIN_RADIUS);
+            id = n.data('id') || n.id();
+            label = n.data('label') || id;
+        } else if (n.renderedPosition) {
+            pos = n.renderedPosition;
+            r = n.renderedRadius || n.radius || config.GRAPH_MIN_RADIUS;
+            id = n.id || n.data?.id || '';
+            label = n.label || n.data?.label || id;
+        } else if (n.position) {
+            pos = n.position;
+            r = n.radius || config.GRAPH_MIN_RADIUS;
+            id = n.id || '';
+            label = n.label || id;
+        }
+
+        if (!pos) return;
+        const d = Math.hypot(px - pos.x, py - pos.y);
+        const effectiveHitRadius = Math.max(r, hitRadius);
+        if (d <= effectiveHitRadius) {
+            candidates.push({ node: n, dist: d, id, label });
+        }
+    });
+
+    if (candidates.length === 0) return null;
+    candidates.sort((a, b) => a.dist - b.dist);
+
+    if (candidates.length === 1) {
+        return { ambiguous: false, node: candidates[0].node, candidates, diff: 999 };
+    }
+
+    const diff = candidates[1].dist - candidates[0].dist;
+    const isAmbiguous = diff < ambiguityThreshold;
+
+    return {
+        ambiguous: isAmbiguous,
+        node: candidates[0].node,
+        candidates,
+        diff
+    };
+}
+
+export function hideDisambiguationPopup() {
+    const popup = document.getElementById('graph-disambiguation-popup');
+    if (popup) popup.classList.add('hidden');
+}
+
+export function showDisambiguationPopup(candidates, pos) {
+    const popup = document.getElementById('graph-disambiguation-popup');
+    const list = document.getElementById('graph-disambiguation-list');
+    const cyWrapper = document.getElementById('cy-wrapper');
+    if (!popup || !list || !candidates || candidates.length === 0) return;
+
+    list.innerHTML = candidates.map(c => {
+        const data = typeof c.node.data === 'function' ? c.node.data() : (c.node.data || c.node);
+        const color = data.color || '#0072B2';
+        return `
+            <button type="button" class="disambig-choice-btn flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-white text-xs font-medium transition-colors cursor-pointer text-left w-full min-h-[36px]" data-id="${esc(c.id)}">
+                <span class="flex items-center gap-1.5 truncate">
+                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${esc(color)}"></span>
+                    <span class="truncate">${esc(c.label || c.id)}</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono flex-shrink-0">${Math.round(c.dist)}px</span>
+            </button>
+        `;
+    }).join('');
+
+    list.querySelectorAll('.disambig-choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const chosenId = btn.dataset.id;
+            hideDisambiguationPopup();
+            if (activeCytoscape) {
+                const target = activeCytoscape.nodes(`[id = "${chosenId}"]`)[0];
+                if (target) openNodeBottomSheet(target);
+            }
+        });
+    });
+
+    if (pos && cyWrapper) {
+        const wrapperRect = cyWrapper.getBoundingClientRect();
+        let left = Math.min(Math.max(10, pos.x - 60), wrapperRect.width - 200);
+        let top = Math.min(Math.max(10, pos.y - 40), wrapperRect.height - 180);
+        popup.style.left = `${Math.round(left)}px`;
+        popup.style.top = `${Math.round(top)}px`;
+    }
+
+    popup.classList.remove('hidden');
+}
+
+export function closeNodeBottomSheet() {
+    const backdrop = document.getElementById('graph-node-sheet-backdrop');
+    if (backdrop) backdrop.classList.add('hidden');
+}
+
+export function openNodeBottomSheet(node) {
+    if (!node) return;
+    const data = typeof node.data === 'function' ? node.data() : (node.data || node);
+    const kw = data.id || data.label || '';
+    const strength = data.strength !== undefined ? data.strength : 0;
+    const freq = data.freq !== undefined ? data.freq : 1;
+    const clusterName = data.clusterName || 'Other';
+    const color = data.color || '#0072B2';
+
+    let degree = 0;
+    const neighbors = [];
+
+    if (typeof node.connectedEdges === 'function') {
+        const edges = node.connectedEdges();
+        degree = edges.length;
+        edges.forEach(edge => {
+            const s = edge.source().data('id');
+            const t = edge.target().data('id');
+            const other = (s === kw) ? t : s;
+            const w = edge.data('weight') || 1;
+            neighbors.push({ kw: other, weight: w });
+        });
+        neighbors.sort((a, b) => b.weight - a.weight);
+    }
+
+    const backdrop = document.getElementById('graph-node-sheet-backdrop');
+    const kwEl = document.getElementById('node-sheet-keyword');
+    const weightEl = document.getElementById('node-sheet-weight');
+    const articlesEl = document.getElementById('node-sheet-articles');
+    const degreeEl = document.getElementById('node-sheet-degree-badge');
+    const clusterEl = document.getElementById('node-sheet-cluster-badge');
+    const neighborsEl = document.getElementById('node-sheet-neighbors');
+    const searchBtn = document.getElementById('node-sheet-search-btn');
+    const addBuilderBtn = document.getElementById('node-sheet-add-builder-btn');
+    const highlightBtn = document.getElementById('node-sheet-highlight-btn');
+    const closeBtn = document.getElementById('node-sheet-close-btn');
+
+    if (kwEl) kwEl.textContent = kw;
+    if (weightEl) weightEl.textContent = String(strength);
+    if (articlesEl) articlesEl.textContent = String(freq);
+    if (degreeEl) degreeEl.textContent = `${degree} connection${degree === 1 ? '' : 's'}`;
+    if (clusterEl) {
+        clusterEl.textContent = clusterName;
+        clusterEl.style.backgroundColor = color;
+    }
+
+    if (neighborsEl) {
+        if (neighbors.length === 0) {
+            neighborsEl.innerHTML = `<span class="text-xs text-slate-400 italic">No connected keywords</span>`;
+        } else {
+            neighborsEl.innerHTML = neighbors.slice(0, 8).map(n => `
+                <button type="button" class="node-neighbor-chip px-2 py-1 rounded bg-slate-100 hover:bg-blue-50 text-slate-700 text-xs font-medium border border-slate-200 transition-colors cursor-pointer" data-kw="${esc(n.kw)}">
+                    ${esc(n.kw)} <span class="text-slate-400 font-mono text-[10px]">(${n.weight})</span>
+                </button>
+            `).join('');
+
+            neighborsEl.querySelectorAll('.node-neighbor-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const neighborKw = chip.dataset.kw;
+                    if (neighborKw && activeCytoscape) {
+                        const neighborNode = activeCytoscape.nodes(`[id = "${neighborKw}"]`);
+                        if (neighborNode.length > 0) {
+                            openNodeBottomSheet(neighborNode[0]);
+                        }
+                    }
+                });
+            });
+        }
+    }
+
+    if (searchBtn) {
+        searchBtn.onclick = () => {
+            closeNodeBottomSheet();
+            if (typeof window.performSearch === 'function') {
+                window.performSearch(kw, { switchTabOnSuccess: true });
+            }
+        };
+    }
+
+    if (addBuilderBtn) {
+        addBuilderBtn.onclick = () => {
+            closeNodeBottomSheet();
+            if (window.BooleanQueryBuilder) {
+                window.BooleanQueryBuilder.addKeyword(kw);
+            }
+        };
+    }
+
+    if (highlightBtn) {
+        highlightBtn.onclick = () => {
+            closeNodeBottomSheet();
+            if (activeCytoscape && typeof node.connectedEdges === 'function') {
+                activeCytoscape.elements().addClass('dimmed');
+                node.removeClass('dimmed').addClass('highlighted');
+                node.connectedEdges().removeClass('dimmed').addClass('highlighted');
+                node.neighborhood().nodes().removeClass('dimmed').addClass('highlighted');
+            }
+        };
+    }
+
+    if (closeBtn) {
+        closeBtn.onclick = () => closeNodeBottomSheet();
+    }
+
+    if (backdrop) {
+        backdrop.onclick = (e) => {
+            if (e.target === backdrop) closeNodeBottomSheet();
+        };
+        backdrop.classList.remove('hidden');
+    }
+}
 
 export function destroyCytoscape() {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
     if (activeCytoscape) {
         try { activeCytoscape.destroy(); } catch (e) { /* ignore cleanup errors */ }
         activeCytoscape = null;
     }
     hideGraphTooltip();
+    hideDisambiguationPopup();
+    closeNodeBottomSheet();
     const graphLegend = document.getElementById('graph-legend');
     if (graphLegend) graphLegend.classList.add('hidden');
+    const progressOverlay = document.getElementById('graph-progress-overlay');
+    if (progressOverlay) progressOverlay.classList.add('hidden');
 }
 
 export function computeNodeRadius(strength, sMin, sMax) {
@@ -400,7 +632,14 @@ export async function renderKeywordsGraph(selectedQueryId) {
     }
 
     const articles = await db.articles.where('queryId').equals(queryId).toArray();
-    const kwCap = graphCapSlider ? parseInt(graphCapSlider.value, 10) : config.DEFAULT_GRAPH_KEYWORD_CAP;
+    const isMobileScreen = typeof window !== 'undefined' && window.innerWidth < 768;
+    let kwCap = graphCapSlider ? parseInt(graphCapSlider.value, 10) : config.DEFAULT_GRAPH_KEYWORD_CAP;
+    if (isMobileScreen && graphCapSlider && !graphCapSlider.dataset.userInteracted) {
+        kwCap = config.DEFAULT_GRAPH_KEYWORD_CAP_MOBILE || 35;
+        graphCapSlider.value = String(kwCap);
+        const capValEl = document.getElementById('graph-cap-val');
+        if (capValEl) capValEl.textContent = String(kwCap);
+    }
     const filterMinWeight = graphMinWeightToggle ? graphMinWeightToggle.checked : false;
 
     const kwCounts = {};
@@ -472,7 +711,18 @@ export async function renderKeywordsGraph(selectedQueryId) {
         strength: nodeStrength[k] || 0
     }));
 
-    const communities = detectCommunitiesLouvain(rawNodes, edges);
+    // IndexedDB layout cache check
+    const cacheKey = `${queryId}_${kwCap}_${filterMinWeight ? 1 : 0}`;
+    let cachedLayout = null;
+    try {
+        if (db && db.graphLayouts) {
+            cachedLayout = await db.graphLayouts.get(cacheKey);
+        }
+    } catch (cacheErr) {
+        console.warn('Error reading graphLayouts cache:', cacheErr);
+    }
+
+    let communities = cachedLayout?.communities || detectCommunitiesLouvain(rawNodes, edges);
     const clusters = processClusters(rawNodes, communities);
 
     const strengths = rawNodes.map(n => n.strength);
@@ -524,16 +774,112 @@ export async function renderKeywordsGraph(selectedQueryId) {
 
     if (graphEmpty) graphEmpty.classList.add('hidden');
 
-    activeCytoscape = cytoscape({
-        container: document.getElementById('cy'),
-        elements: [...cyNodes, ...cyEdges],
-        layout: {
+    // Layout resolution: Cached -> Web Worker -> Fallback CoSE
+    let workerPositions = cachedLayout?.positions || null;
+
+    if (!workerPositions && typeof Worker !== 'undefined') {
+        const progressOverlay = document.getElementById('graph-progress-overlay');
+        const progressBar = document.getElementById('graph-progress-bar');
+        const progressText = document.getElementById('graph-progress-text');
+
+        if (progressOverlay) {
+            if (progressBar) progressBar.style.width = '25%';
+            if (progressText) progressText.textContent = 'Clustering keywords (Louvain)...';
+            progressOverlay.classList.remove('hidden');
+        }
+
+        try {
+            const workerResult = await new Promise((resolve, reject) => {
+                const worker = new Worker(new URL('./graphWorker.js', import.meta.url), { type: 'module' });
+                const timer = setTimeout(() => {
+                    worker.terminate();
+                    reject(new Error('Graph worker timeout'));
+                }, 3500);
+
+                worker.onmessage = (msgEvt) => {
+                    const msg = msgEvt.data || {};
+                    if (msg.type === 'PROGRESS') {
+                        if (progressText) progressText.textContent = msg.message;
+                        if (progressBar) progressBar.style.width = msg.stage === 'clustering' ? '50%' : '80%';
+                    } else if (msg.type === 'COMPLETE') {
+                        clearTimeout(timer);
+                        worker.terminate();
+                        resolve(msg.payload);
+                    } else if (msg.type === 'ERROR') {
+                        clearTimeout(timer);
+                        worker.terminate();
+                        reject(new Error(msg.error));
+                    }
+                };
+                worker.onerror = (err) => {
+                    clearTimeout(timer);
+                    worker.terminate();
+                    reject(err);
+                };
+
+                const simpleNodes = cyNodes.map(n => ({ id: n.data.id, radius: n.data.radius }));
+                const simpleEdges = edges.map(e => ({ source: e.source, target: e.target, weight: e.weight }));
+                const cyEl = document.getElementById('cy');
+                const width = cyEl?.clientWidth || 800;
+                const height = cyEl?.clientHeight || 600;
+
+                worker.postMessage({
+                    type: 'COMPUTE_GRAPH',
+                    payload: {
+                        queryId,
+                        cap: kwCap,
+                        minWeight: filterMinWeight ? 1 : 0,
+                        nodes: simpleNodes,
+                        edges: simpleEdges,
+                        width,
+                        height
+                    }
+                });
+            });
+
+            if (workerResult && workerResult.positions) {
+                workerPositions = workerResult.positions;
+                try {
+                    if (db && db.graphLayouts) {
+                        await db.graphLayouts.put({
+                            id: cacheKey,
+                            queryId,
+                            cap: kwCap,
+                            minWeight: filterMinWeight ? 1 : 0,
+                            positions: workerPositions,
+                            communities: workerResult.communities
+                        });
+                    }
+                } catch (e) { /* ignore cache write errors */ }
+            }
+        } catch (wErr) {
+            console.warn('Worker computation fallback to local thread:', wErr);
+        } finally {
+            if (progressOverlay) {
+                if (progressBar) progressBar.style.width = '100%';
+                setTimeout(() => progressOverlay.classList.add('hidden'), 150);
+            }
+        }
+    }
+
+    const layoutConfig = workerPositions
+        ? {
+            name: 'preset',
+            positions: (n) => workerPositions[n.id()] || { x: 0, y: 0 },
+            padding: 30
+        }
+        : {
             name: 'cose',
             animate: false,
             nodeRepulsion: coseNodeRepulsion,
             idealEdgeLength: coseIdealEdgeLength,
             padding: 30
-        },
+        };
+
+    activeCytoscape = cytoscape({
+        container: document.getElementById('cy'),
+        elements: [...cyNodes, ...cyEdges],
+        layout: layoutConfig,
         style: [
             {
                 selector: 'node',
@@ -553,6 +899,7 @@ export async function renderKeywordsGraph(selectedQueryId) {
                     'text-outline-width': 2,
                     'text-outline-color': '#ffffff',
                     'text-outline-opacity': 0.9,
+                    'min-zoomed-font-size': config.GRAPH_MIN_ZOOMED_FONT_SIZE,
                     'transition-property': 'background-color, border-color, width, height, opacity',
                     'transition-duration': '0.15s'
                 }
@@ -603,15 +950,77 @@ export async function renderKeywordsGraph(selectedQueryId) {
             }
         ],
         wheelSensitivity: 0.25,
-        minZoom: 0.1,
-        maxZoom: 3.0
+        minZoom: config.GRAPH_MIN_ZOOM,
+        maxZoom: config.GRAPH_MAX_ZOOM,
+        touchTapThreshold: config.GRAPH_TOUCH_TAP_THRESHOLD,
+        hideEdgesOnViewport: true,
+        textureOnViewport: true,
+        userPanningEnabled: true,
+        userZoomingEnabled: true,
+        boxSelectionEnabled: false
     });
 
     renderLegend(clusters);
 
-    // Graph interactions & Drag-and-drop to Query Builder
-    activeCytoscape.on('tap', (e) => {
+    // Toolbar buttons (Zoom In / Out / Fit / Relayout)
+    const zoomInBtn = document.getElementById('graph-zoom-in');
+    const zoomOutBtn = document.getElementById('graph-zoom-out');
+    const fitBtn = document.getElementById('graph-fit');
+    const relayoutBtn = document.getElementById('graph-relayout');
+
+    if (zoomInBtn && !zoomInBtn.dataset.wired) {
+        zoomInBtn.dataset.wired = 'true';
+        zoomInBtn.addEventListener('click', () => {
+            if (activeCytoscape) {
+                const z = activeCytoscape.zoom();
+                activeCytoscape.zoom({ level: Math.min(config.GRAPH_MAX_ZOOM, z * 1.25), renderedPosition: { x: activeCytoscape.width() / 2, y: activeCytoscape.height() / 2 } });
+            }
+        });
+    }
+    if (zoomOutBtn && !zoomOutBtn.dataset.wired) {
+        zoomOutBtn.dataset.wired = 'true';
+        zoomOutBtn.addEventListener('click', () => {
+            if (activeCytoscape) {
+                const z = activeCytoscape.zoom();
+                activeCytoscape.zoom({ level: Math.max(config.GRAPH_MIN_ZOOM, z / 1.25), renderedPosition: { x: activeCytoscape.width() / 2, y: activeCytoscape.height() / 2 } });
+            }
+        });
+    }
+    if (fitBtn && !fitBtn.dataset.wired) {
+        fitBtn.dataset.wired = 'true';
+        fitBtn.addEventListener('click', () => {
+            if (activeCytoscape) activeCytoscape.fit(undefined, 30);
+        });
+    }
+    if (relayoutBtn && !relayoutBtn.dataset.wired) {
+        relayoutBtn.dataset.wired = 'true';
+        relayoutBtn.addEventListener('click', async () => {
+            if (db && db.graphLayouts) {
+                try {
+                    await db.graphLayouts.delete(cacheKey);
+                } catch (e) { /* ignore */ }
+            }
+            renderKeywordsGraph();
+        });
+    }
+
+    // Helper: detect if event originates from touch
+    function isTouchInteraction(e, extra) {
+        const oe = e?.originalEvent || extra?.originalEvent || extra;
+        if (oe?.pointerType === 'touch' || oe?.pointerType === 'pen') return true;
+        if (typeof TouchEvent !== 'undefined' && oe instanceof TouchEvent) return true;
+        if (oe?.touches && oe.touches.length > 0) return true;
+        if (oe?.changedTouches && oe.changedTouches.length > 0) return true;
+        if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches && oe?.pointerType !== 'mouse') return true;
+        if (typeof window !== 'undefined' && (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) && oe?.pointerType !== 'mouse' && (!e?.originalEvent || e.originalEvent?.pointerType !== 'mouse')) return true;
+        return false;
+    }
+
+    // Graph background tap handling (Dismiss popups, Double tap zoom, & Touch hit-test on empty space near nodes)
+    activeCytoscape.on('tap', (e, extra) => {
         if (e.target === activeCytoscape) {
+            hideDisambiguationPopup();
+            hideGraphTooltip();
             if (activeClusterFilter) {
                 activeClusterFilter = null;
                 if (legendBody) {
@@ -621,7 +1030,39 @@ export async function renderKeywordsGraph(selectedQueryId) {
                 }
             }
             activeCytoscape.elements().removeClass('dimmed highlighted');
-            hideGraphTooltip();
+
+            const isTouch = isTouchInteraction(e, extra);
+            const rPos = e.renderedPosition || extra?.renderedPosition;
+            if (isTouch && rPos) {
+                // Check if user tapped within 24px screen radius of a node
+                const hitResult = hitTestNodesAtPoint(rPos, activeCytoscape.nodes(), config.GRAPH_TOUCH_HIT_RADIUS, config.GRAPH_AMBIGUITY_THRESHOLD);
+                if (hitResult && hitResult.node) {
+                    if (hitResult.ambiguous && hitResult.candidates.length > 1) {
+                        showDisambiguationPopup(hitResult.candidates, rPos);
+                    } else {
+                        openNodeBottomSheet(hitResult.node);
+                    }
+                    return;
+                }
+            }
+
+            // Double tap zoom handling
+            const now = Date.now();
+            const pos = rPos || { x: 0, y: 0 };
+            const dist = Math.hypot(pos.x - lastBackgroundTapPos.x, pos.y - lastBackgroundTapPos.y);
+            if (now - lastBackgroundTapTime < 350 && dist < 30) {
+                const currentZoom = activeCytoscape.zoom();
+                const newZoom = Math.min(config.GRAPH_MAX_ZOOM, currentZoom * config.GRAPH_DOUBLE_TAP_ZOOM_FACTOR);
+                activeCytoscape.animate({
+                    zoom: newZoom,
+                    renderedPosition: pos,
+                    duration: 250
+                });
+                lastBackgroundTapTime = 0;
+            } else {
+                lastBackgroundTapTime = now;
+                lastBackgroundTapPos = { ...pos };
+            }
         }
     });
 
@@ -649,12 +1090,49 @@ export async function renderKeywordsGraph(selectedQueryId) {
         }
     });
 
+    // Touch Long-Press detection on nodes (>= 400ms adds directly to builder)
+    activeCytoscape.on('tapstart', 'node', (e, extra) => {
+        const isTouch = isTouchInteraction(e, extra);
+        if (isTouch) {
+            longPressTriggered = false;
+            const rPos = e.renderedPosition || extra?.renderedPosition || (typeof e.target.renderedPosition === 'function' ? e.target.renderedPosition() : { x: 0, y: 0 });
+            touchStartPos = { ...rPos };
+            clearTimeout(longPressTimer);
+            const node = e.target;
+            const kw = node.data('id');
+            longPressTimer = setTimeout(() => {
+                longPressTriggered = true;
+                if (window.BooleanQueryBuilder && kw) {
+                    window.BooleanQueryBuilder.addKeyword(kw);
+                    if (window.showNotification) {
+                        window.showNotification(`Added "${kw}" to Query Builder`, 'success');
+                    }
+                }
+            }, 400);
+        }
+    });
+
+    activeCytoscape.on('tapdrag', (e) => {
+        if (longPressTimer) {
+            const pos = e.renderedPosition || { x: 0, y: 0 };
+            if (Math.hypot(pos.x - touchStartPos.x, pos.y - touchStartPos.y) > 10) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+    });
+
+    activeCytoscape.on('tapend', () => {
+        clearTimeout(longPressTimer);
+    });
+
     // Drag avatar and node drop handling
     let grabbedNode = null;
     let grabbedNodeOriginalPos = null;
     let dragAvatar = document.getElementById('cy-drag-avatar');
 
     activeCytoscape.on('grab', 'node', (e) => {
+        clearTimeout(longPressTimer);
         hideGraphTooltip();
         grabbedNode = e.target;
         grabbedNodeOriginalPos = { ...grabbedNode.position() };
@@ -743,13 +1221,37 @@ export async function renderKeywordsGraph(selectedQueryId) {
         });
     });
 
-    // Tap on node: fallback to add keyword to builder or click search
-    activeCytoscape.on('tap', 'node', (e) => {
-        if (Date.now() - lastDropTimestamp < 350) return; // Drop just occurred
+    // Tap on node:
+    // BEHAVIOR CHANGE: On touch devices opens bottom sheet (or disambiguation list); long-press adds to builder.
+    // On desktop, click maintains existing search/builder action.
+    activeCytoscape.on('tap', 'node', (e, extra) => {
+        clearTimeout(longPressTimer);
+        if (longPressTriggered) {
+            longPressTriggered = false;
+            return;
+        }
+        if (Date.now() - lastDropTimestamp < 350) return;
+
         const node = e.target;
         const kw = node.data('id');
-        if (kw && window.BooleanQueryBuilder) {
-            window.BooleanQueryBuilder.addKeyword(kw);
+        const isTouch = isTouchInteraction(e, extra);
+
+        if (!isTouch) {
+            // Desktop interaction: trigger search / add
+            if (typeof window.performSearch === 'function') {
+                window.performSearch(kw, { switchTabOnSuccess: true });
+            } else if (kw && window.BooleanQueryBuilder) {
+                window.BooleanQueryBuilder.addKeyword(kw);
+            }
+        } else {
+            // Touch device tap: check 24px radius ambiguity
+            const rPos = e.renderedPosition || extra?.renderedPosition || (typeof node.renderedPosition === 'function' ? node.renderedPosition() : null);
+            const hitResult = rPos ? hitTestNodesAtPoint(rPos, activeCytoscape.nodes(), config.GRAPH_TOUCH_HIT_RADIUS, config.GRAPH_AMBIGUITY_THRESHOLD) : null;
+            if (hitResult && hitResult.ambiguous && hitResult.candidates.length > 1) {
+                showDisambiguationPopup(hitResult.candidates, rPos);
+            } else {
+                openNodeBottomSheet(node);
+            }
         }
     });
 
@@ -778,8 +1280,20 @@ if (typeof window !== 'undefined') {
     window.hideGraphTooltip = hideGraphTooltip;
     window.renderKeywordsGraph = renderKeywordsGraph;
     window.destroyCytoscape = destroyCytoscape;
+    window.hitTestNodesAtPoint = hitTestNodesAtPoint;
+    window.openNodeBottomSheet = openNodeBottomSheet;
+    window.closeNodeBottomSheet = closeNodeBottomSheet;
+    window.showDisambiguationPopup = showDisambiguationPopup;
+    window.hideDisambiguationPopup = hideDisambiguationPopup;
     Object.defineProperty(window, 'activeCytoscape', {
         get() { return activeCytoscape; },
         set(v) { activeCytoscape = v; }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeNodeBottomSheet();
+            hideDisambiguationPopup();
+        }
     });
 }

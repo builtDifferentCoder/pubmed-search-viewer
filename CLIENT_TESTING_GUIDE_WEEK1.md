@@ -86,15 +86,37 @@ To test directly using your laptop's Wi-Fi IP (e.g. `http://192.168.100.58:4173`
 
 ---
 
-### Test 2: Keywords Graph & Touch-Friendly Boolean Query Builder
-1. Tap the **Keywords Graph** tab in the top navigation.
-2. Observe the Cytoscape co-occurrence graph rendered with Louvain community detection colors and weighted degree sizing.
-3. Above the graph, observe the frosted-glass **Boolean Query Builder**:
-   - **On Mobile:** Tap any node (or type into the `+ Add keyword...` autocomplete box) to add it as a query chip.
-   - **On Desktop:** Drag a keyword node directly into the query builder drop zone.
-4. Select a logical operator (**AND**, **OR**, **NOT**) when prompted.
-5. Select multiple chips and test **`( ) Group`** to create nested expressions (e.g., `(diet AND ketosis) NOT obesity`).
-6. Tap **Run Search** to verify the compiled Boolean query is executed and switches back to Search Results.
+### Test 2: Touch-Optimized Keywords Graph & Finger-Friendly Query Builder
+1. Tap the **Keywords Graph** tab (bottom tab bar on mobile, top bar on desktop).
+2. **Smooth Touch Gestures & Navigation:**
+   - **Pinch-to-zoom:** Pinch in or out to zoom smoothly between 0.1x and 3.5x.
+   - **Double-tap to zoom:** Double-tap anywhere on empty canvas space to zoom in 1.5x toward your finger.
+   - **One-finger pan:** Drag on empty space to pan the network. Notice edges simplify during movement (LOD) for 60fps fluidity.
+   - **Zoom fallback:** Test the 44px **+**, **-**, and **Fit** buttons on the top-right toolbar.
+3. **Finger Hit Targets (24px Expanded Radius & Disambiguation):**
+   - Tap near any tiny node: even small nodes are easily tapped without pixel precision thanks to an expanded 24px screen hit radius.
+   - If two nodes are clustered closely together (< 8px apart), a "Select keyword:" disambiguation menu pops up to let you pick the exact keyword.
+4. **Mobile Node Bottom Sheet (Behavior Change):**
+   - Tapping any keyword node on mobile opens an interactive **Node Bottom Sheet** showing:
+     - Total co-occurrences, articles count, degree (# of connections), and topic cluster badge.
+     - Tappable chips of top co-occurring neighbor keywords.
+     - 3 Touch Action Buttons:
+       1. **"Search PubMed for this"**: Launches a live PubMed query and switches to Search Results.
+       2. **"Add to query builder"**: Appends the keyword to the docked Boolean query tray.
+       3. **"Highlight neighbors"**: Dims unrelated nodes and illuminates the local network neighborhood.
+5. **Node Long-Press Shortcut:**
+   - Press and hold any node for ~0.4s: it adds the keyword directly into the Query Builder without opening the bottom sheet.
+   - On desktop computers, mouse click and drag-and-drop remain fully supported.
+6. **Mobile Docked Query Builder Tray:**
+   - Observe the collapsible docked tray at the bottom of the graph.
+   - **No drag-and-drop needed:** Tap nodes, use autocomplete, or tap the **+ Add keyword...** box.
+   - **Cycle Operators:** Tap any operator badge (`AND`, `OR`, `NOT`) to cycle between them.
+   - **Reorder with Arrows:** Tap `←` and `→` on any chip to rearrange terms.
+   - **Inline Edit:** Tap the keyword text on any chip to edit it directly.
+   - **Group in ( ):** Check two or more chip checkboxes and tap **`( ) Group`**.
+7. **Fast Layout & Off-Thread Performance:**
+   - Notice the Louvain clustering and force layout run off the main thread in a Web Worker (with progress indicator), and layout positions are persistently cached in IndexedDB for instant sub-20ms rendering upon return.
+   - Topic cluster colors follow an extended Okabe-Ito colorblind-safe palette, and tapping legend chips filters the graph by topic.
 
 ---
 

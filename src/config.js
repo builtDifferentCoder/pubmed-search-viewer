@@ -44,6 +44,7 @@ export const config = {
     // Community Detection & Clusters Constants (Louvain)
     GRAPH_MAX_CLUSTERS: 8,            // Maximum top clusters retained
     GRAPH_MIN_CLUSTER_SIZE: 3,        // Minimum cluster node count before folding into Other
+    // Colorblind-safe Cluster Palette (Extended Okabe-Ito, high-contrast in light & dark)
     CLUSTER_PALETTE: [
         '#0072B2', // Blue
         '#E69F00', // Orange
@@ -52,10 +53,22 @@ export const config = {
         '#56B4E9', // Sky Blue
         '#D55E00', // Vermilion
         '#F0E442', // Yellow
-        '#33BBEE'  // Cyan
+        '#7570B3', // Purple / Lavender
+        '#117733', // Deep Green
+        '#882255'  // Wine
     ],
     CLUSTER_OTHER_COLOR: '#94a3b8',   // Neutral grey for singletons and tiny clusters
     CLUSTER_OTHER_BORDER: '#64748b',
+
+    // Keywords Graph Touch, Gestures & LOD (Phase 0 / Mobile Graph)
+    GRAPH_MIN_ZOOM: 0.1,
+    GRAPH_MAX_ZOOM: 3.5,
+    GRAPH_TOUCH_TAP_THRESHOLD: 8,
+    GRAPH_TOUCH_HIT_RADIUS: 24,       // Screen radius in px for touch tap hit area
+    GRAPH_AMBIGUITY_THRESHOLD: 8,     // Distance diff in px triggering disambiguation popup
+    GRAPH_MIN_ZOOMED_FONT_SIZE: 8,    // Hide node labels when rendered font size < 8px
+    GRAPH_DOUBLE_TAP_ZOOM_FACTOR: 1.5,
+    DEFAULT_GRAPH_KEYWORD_CAP_MOBILE: 35,
 
     // Sample size bucket thresholds
     SAMPLE_SIZE_THRESHOLDS: {
@@ -218,6 +231,14 @@ export const BOTTOM_SHEET_PAGE_SIZE = config.BOTTOM_SHEET_PAGE_SIZE;
 export const PULL_TO_REFRESH_THRESHOLD_PX = config.PULL_TO_REFRESH_THRESHOLD_PX;
 export const LONG_PRESS_MS = config.LONG_PRESS_MS;
 export const MOBILE_CHART_FONT_SIZE = config.MOBILE_CHART_FONT_SIZE;
+export const GRAPH_MIN_ZOOM = config.GRAPH_MIN_ZOOM;
+export const GRAPH_MAX_ZOOM = config.GRAPH_MAX_ZOOM;
+export const GRAPH_TOUCH_TAP_THRESHOLD = config.GRAPH_TOUCH_TAP_THRESHOLD;
+export const GRAPH_TOUCH_HIT_RADIUS = config.GRAPH_TOUCH_HIT_RADIUS;
+export const GRAPH_AMBIGUITY_THRESHOLD = config.GRAPH_AMBIGUITY_THRESHOLD;
+export const GRAPH_MIN_ZOOMED_FONT_SIZE = config.GRAPH_MIN_ZOOMED_FONT_SIZE;
+export const GRAPH_DOUBLE_TAP_ZOOM_FACTOR = config.GRAPH_DOUBLE_TAP_ZOOM_FACTOR;
+export const DEFAULT_GRAPH_KEYWORD_CAP_MOBILE = config.DEFAULT_GRAPH_KEYWORD_CAP_MOBILE;
 export { HELP_TEXT };
 
 // Expose on window for runtime and test verification
